@@ -1,18 +1,24 @@
 ---
 title: "Activity: Street or Road?"
-author: "YOUR NAME HERE"
+author: "Mysha Nihal"
 output: html_notebook
 ---
 
 ## Load in the data
 
+entire `Addresses` data set. Explain how your code works line by line.
+
 ```{r}
-#load libraries 
 
-#load in the data here 
-# we will only be using the "street-addresses.csv" file from the text
+#load libraries
 
+library(magrittr)
+library(readr)
+library(dplyr)
+library(ggplot2)
+#load in the data here
 
+Addresses <- read_csv("https://mdbeckman.github.io/dcSupplement/data/street-addresses.csv")
 
 ```
 
@@ -20,56 +26,141 @@ output: html_notebook
 
 ```{r}
 
+Sample <-
+  Addresses %>%
+    sample_n(size = 50)
+head(Sample)
+
+pattern <- 'PO'
+
+Matches <-
+  Sample %>%
+    filter(grepl(pattern = pattern, address))
+head(Matches)
+
+Dont <-
+  Sample %>%
+    filter(!grepl(pattern = 'PO', address))
+head(Dont)
+
+pattern <- 'BOX\\s+(\\d+)'
+
+Matches <-
+  Sample %>%
+    filter( grepl(pattern, address))
+head(Matches)
+
+Dont <-
+  Sample %>%
+    filter(!grepl(pattern, address))
+head(Dont)
+
+BoxNumbers <-
+  Sample %>%
+    filter(grepl(pattern, address)) %>%
+    tidyr::extract(address, into = 'boxnum', regex = pattern)
+head(BoxNumbers)
 
 ```
 
-## Recreate Soved Example using the entire `Address` data set
+## Recreate Solved Example using the entire `Address` data set
 
 ```{r}
 
+pattern <- 'PO'
+
+Matches <-
+  Addresses %>%
+    filter(grepl(pattern = pattern, address))
+head(Matches)
+
+Dont <-
+  Addresses %>%
+    filter(!grepl(pattern = 'PO', address))
+head(Dont)
+
+pattern <- 'BOX\\s+(\\d+)'
+
+Matches <-
+  Addresses %>%
+    filter( grepl(pattern, address))
+head(Matches)
+
+Dont <-
+  Addresses %>%
+    filter(!grepl(pattern, address))
+head(Dont)
+
+BoxNumbers <-
+  Addresses %>%
+    filter(grepl(pattern, address)) %>%
+    tidyr::extract(address, into = 'boxnum', regex = pattern)
+head(BoxNumbers)
 
 ```
 
-#### Additional Question: How many addresses are a PO BOX (including NCSU BOX)? 
+#### Additional Question: How many addresses are a PO BOX (including NCSU BOX)?
 
 ```{r}
 
+Matches <- 
+  Addresses %>%
+  filter(grepl(pattern = "PO BOX|NCSU BOX", address))
+
+count(Matches)
 
 ```
-
-My answer here...... 
-
 
 ## Back to the Streets: Your Turn
 
 #### Part 1: Explain (in english) each line of the following code chunk
 
 ```{r}
-pattern <- "(ST|RD|ROAD)"
-LeftOvers <-
-  Addresses %>% 
-  filter( !grepl(pattern, address),
-          !grepl("\\sAPT|UNIT\\s[\\d]+$", address),
-          !grepl(" BOX ", address)
-          )
+
+# pattern <- "(ST|RD|ROAD)" = pattern that matches the strings "ST", "RD", or "ROAD" is assigned to the variable 'pattern'.
+
+# LeftOvers <- = filtered rows assigned to the 'LeftOvers' data frame.
+
+#  Addresses %>% = takes the Addresses data frame as the input.
+
+#  filter( !grepl(pattern, address), = excludes rows where the 'address' column contains "ST", "RD", or "ROAD" using the 'grepl()'.
+
+#          !grepl("\\sAPT|UNIT\\s[\\d]+$", address), = excludes rows where the 'address' column contains "APT" or "UNIT" followed by a space and one or more digits using the 'grepl()' function.
+
+#          !grepl(" BOX ", address) = excludes rows where the address column contains the exact phrase " BOX " using the grepl() function.
+
+
 ```
 
-My answer here.......
-
-#### Part 2: Implement your method on the entire `Addresses` data set. Explain how your code works line by line.
+#### Part 2: Implement your method on the entire Addresses data set. Explain how your code works line by line.
 
 ```{r}
 
+pattern2 <- "(AVE|BLVD|PL)"
+NewAddresses <- Addresses %>%
+filter(grepl(pattern2, address))
 
+show(NewAddresses)
+
+# pattern2 <- "(AVE|BLVD|PL)" = assigns the pattern "(AVE|BLVD|PL)" to the variable 'pattern2'.
+
+# NewAddresses <- Addresses %>% = creates a new data frame called 'NewAddresses' by filtering the Addresses data frame.
+
+#filter(grepl(pattern2, address)) = filter the address that contains the pattern.
+
+#show(NewAddresses) = show the new data frame.
 
 ```
-
-My answer here.......
 
 #### Additional Question 1: Present your result from part 2 by providing a table in descending order of popularity for the street name endings you found
 
 ```{r}
 
+EndingCounts <- table(NewAddresses$address) %>%
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+show(EndingCounts)
 
 ```
 
@@ -79,8 +170,14 @@ Note: make sure your order street names according to popularity, not alphabetica
 
 ```{r}
 
+ggplot(data = EndingCounts, aes(x = reorder(Var1, -Freq), y = Freq)) +
+  geom_bar(fill = "red", stat = "identity") +
+  labs(x = "Street Name Endings", y = "Frequency") +
+  ggtitle("Popularity of Street Name Endings") +
+  theme_bw()
+  
 ```
 
 #### Additional Question 3: Comment on any patterns you see
 
-My answer here.......
+'RD', and 'ST' are the most common street types.
